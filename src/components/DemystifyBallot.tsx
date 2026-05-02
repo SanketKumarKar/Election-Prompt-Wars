@@ -2,15 +2,20 @@ import React, { useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { marked } from 'marked';
 import { Loader2, FileText, Send } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function DemystifyBallot() {
   const [legalText, setLegalText] = useState('');
   const [resultHTML, setResultHTML] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const titleText = useTranslation('Demystify Ballot');
+  const subtitleText = useTranslation('Paste complex legal text for a summary.');
+  const labelText = useTranslation('Legal Proposition Text');
+  const placeholderText = useTranslation('Paste the confusing legalese here...');
+  const analyzingText = useTranslation('Analyzing Text...');
+  const demystifyBtn = useTranslation('Demystify');
 
   const handleDemystify = async () => {
     if (!legalText.trim()) return;
@@ -20,20 +25,19 @@ export default function DemystifyBallot() {
     setResultHTML('');
 
     try {
-      const systemInstruction = "You are a non-partisan civic educator. Translate this legal text into a 5th-grade reading level summary. List 3 Pros and 3 Cons. Do not hallucinate. Do not express political bias. Output the response in Markdown format, with headers for the Summary, Pros, and Cons.";
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: legalText,
-        config: { systemInstruction }
+      const response = await fetch('/api/demystify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: legalText })
       });
 
-      if (!response.text) {
-        throw new Error('Failed to process the text');
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(typeof data.error === 'string' ? data.error : data.error.message || 'API Error');
       }
 
       // Parse markdown to HTML
-      const rawHTML = await marked.parse(response.text);
+      const rawHTML = await marked.parse(data.text);
       
       // Sanitize the HTML before injecting it into the DOM
       const safeHTML = DOMPurify.sanitize(rawHTML);

@@ -1,60 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Landmark, Users, Megaphone, CheckCircle, BarChart3, Building, ChevronRight } from 'lucide-react';
+import { useTranslation, useTranslations } from '../hooks/useTranslation';
 
-const steps = [
-  {
-    id: 1,
-    title: 'Announcement',
-    icon: <Landmark className="w-12 h-12 text-orange-500" />,
-    description: 'The Election Commission of India (ECI) announces the election schedule, activating the Model Code of Conduct to ensure fair play.',
-    color: 'bg-orange-100',
-    borderColor: 'border-orange-300'
-  },
-  {
-    id: 2,
-    title: 'Nominations',
-    icon: <Users className="w-12 h-12 text-blue-500" />,
-    description: 'Candidates from various political parties (and independents) file their nomination papers, declaring their assets and criminal records.',
-    color: 'bg-blue-100',
-    borderColor: 'border-blue-300'
-  },
-  {
-    id: 3,
-    title: 'Campaigning',
-    icon: <Megaphone className="w-12 h-12 text-pink-500" />,
-    description: 'Parties release manifestos and campaign vigorously through rallies, media, and door-to-door visits. Campaigning stops 48 hours before voting.',
-    color: 'bg-pink-100',
-    borderColor: 'border-pink-300'
-  },
-  {
-    id: 4,
-    title: 'Voting Day',
-    icon: <CheckCircle className="w-12 h-12 text-emerald-500" />,
-    description: 'Citizens cast their votes using Electronic Voting Machines (EVMs) equipped with VVPAT for verification at secure polling booths.',
-    color: 'bg-emerald-100',
-    borderColor: 'border-emerald-300'
-  },
-  {
-    id: 5,
-    title: 'Counting',
-    icon: <BarChart3 className="w-12 h-12 text-purple-500" />,
-    description: 'EVMs are kept in strong rooms until counting day. Votes are tallied under strict surveillance, and results are declared.',
-    color: 'bg-purple-100',
-    borderColor: 'border-purple-300'
-  },
-  {
-    id: 6,
-    title: 'Govt Formation',
-    icon: <Building className="w-12 h-12 text-teal-500" />,
-    description: 'The party or coalition securing a majority (e.g., 272+ seats in Lok Sabha) is invited by the President to form the government.',
-    color: 'bg-teal-100',
-    borderColor: 'border-teal-300'
-  }
+const stepIcons = [
+  <Landmark className="w-12 h-12 text-orange-500" key="1" />,
+  <Users className="w-12 h-12 text-blue-500" key="2" />,
+  <Megaphone className="w-12 h-12 text-pink-500" key="3" />,
+  <CheckCircle className="w-12 h-12 text-emerald-500" key="4" />,
+  <BarChart3 className="w-12 h-12 text-purple-500" key="5" />,
+  <Building className="w-12 h-12 text-teal-500" key="6" />
+];
+
+const stepColors = [
+  { color: 'bg-orange-100', borderColor: 'border-orange-300' },
+  { color: 'bg-blue-100', borderColor: 'border-blue-300' },
+  { color: 'bg-pink-100', borderColor: 'border-pink-300' },
+  { color: 'bg-emerald-100', borderColor: 'border-emerald-300' },
+  { color: 'bg-purple-100', borderColor: 'border-purple-300' },
+  { color: 'bg-teal-100', borderColor: 'border-teal-300' }
 ];
 
 export default function IndianElectionProcess() {
   const [activeStep, setActiveStep] = useState(0);
+
+  const rawTitles = ['Announcement', 'Nominations', 'Campaigning', 'Voting Day', 'Counting', 'Govt Formation'];
+  const rawDescs = [
+    'The Election Commission of India (ECI) announces the election schedule, activating the Model Code of Conduct to ensure fair play.',
+    'Candidates from various political parties (and independents) file their nomination papers, declaring their assets and criminal records.',
+    'Parties release manifestos and campaign vigorously through rallies, media, and door-to-door visits. Campaigning stops 48 hours before voting.',
+    'Citizens cast their votes using Electronic Voting Machines (EVMs) equipped with VVPAT for verification at secure polling booths.',
+    'EVMs are kept in strong rooms until counting day. Votes are tallied under strict surveillance, and results are declared.',
+    'The party or coalition securing a majority (e.g., 272+ seats in Lok Sabha) is invited by the President to form the government.'
+  ];
+
+  const titles = useTranslations(rawTitles);
+  const descriptions = useTranslations(rawDescs);
+
+  const steps = useMemo(() => {
+    return rawTitles.map((_, i) => ({
+      id: i + 1,
+      title: titles[i] || rawTitles[i],
+      description: descriptions[i] || rawDescs[i],
+      icon: stepIcons[i],
+      ...stepColors[i]
+    }));
+  }, [titles, descriptions]);
+
+  const guideText = useTranslation('Interactive Guide');
+  const howIndiaVotesText = useTranslation('How India Votes');
+  const subtitleText = useTranslation("The 6-step journey of the world's largest democracy.");
+  const backText = useTranslation('Back');
+  const startOverText = useTranslation('Start Over');
+  const nextText = useTranslation('Next');
 
   return (
     <section aria-label="Election Process in India" className="col-span-1 lg:col-span-12 row-span-2 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl border-2 border-slate-800 shadow-xl flex flex-col p-4 sm:p-6 overflow-hidden text-white relative">
@@ -67,10 +65,10 @@ export default function IndianElectionProcess() {
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/30 text-indigo-200 uppercase tracking-widest border border-indigo-500/30">Interactive Guide</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/30 text-indigo-200 uppercase tracking-widest border border-indigo-500/30">{guideText}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">How India Votes</h2>
-            <p className="text-sm text-indigo-200 mt-1">The 6-step journey of the world's largest democracy.</p>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">{howIndiaVotesText}</h2>
+            <p className="text-sm text-indigo-200 mt-1">{subtitleText}</p>
           </div>
           <div className="flex gap-2">
             <button 
@@ -78,13 +76,13 @@ export default function IndianElectionProcess() {
               disabled={activeStep === 0}
               className="px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-800/50 text-slate-300 text-sm font-medium hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Back
+              {backText}
             </button>
             <button 
               onClick={() => setActiveStep(activeStep === steps.length - 1 ? 0 : activeStep + 1)}
               className="px-4 py-1.5 rounded-lg bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-400 transition-colors shadow-md flex items-center gap-1"
             >
-              {activeStep === steps.length - 1 ? 'Start Over' : 'Next'}
+              {activeStep === steps.length - 1 ? startOverText : nextText}
               <ChevronRight size={16} className={activeStep === steps.length - 1 ? "hidden" : "block"} />
             </button>
           </div>

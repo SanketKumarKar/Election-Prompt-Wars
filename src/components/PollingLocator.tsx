@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2, MapPin, List } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { useTranslation, useTranslations } from '../hooks/useTranslation';
 
 export default function PollingLocator() {
   const [address, setAddress] = useState('');
@@ -27,13 +28,19 @@ export default function PollingLocator() {
   const [mapError, setMapError] = useState(false);
   const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
+  const titleText = useTranslation('Polling Locator');
+  const subtitleText = useTranslation('Find your nearest polling places');
+  const placeholderText = useTranslation('Enter your street address...');
+  const searchText = useTranslation('Search');
+  const listTitleText = useTranslation('List of Polling Places');
+
   return (
     <section aria-label="Polling Locator" className="col-span-1 lg:col-span-4 lg:row-span-3 bg-white rounded-2xl border-2 border-slate-200 overflow-hidden shadow-sm flex flex-col">
       <div className="p-3 bg-white/80 backdrop-blur-sm border-b border-slate-100 flex items-center space-x-2 shrink-0">
         <MapPin size={16} className="text-slate-400" />
         <div>
-          <h2 className="text-xs font-bold uppercase text-slate-500">Polling Locator</h2>
-          <p className="text-[10px] text-slate-400 leading-tight">Find your nearest polling places</p>
+          <h2 className="text-xs font-bold uppercase text-slate-500">{titleText}</h2>
+          <p className="text-[10px] text-slate-400 leading-tight">{subtitleText}</p>
         </div>
       </div>
       
@@ -46,7 +53,7 @@ export default function PollingLocator() {
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter your street address..."
+              placeholder={placeholderText}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 sm:py-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white outline-none text-sm"
             />
           </div>
@@ -55,7 +62,7 @@ export default function PollingLocator() {
             disabled={isLoading || !address.trim()}
             className="w-full sm:w-auto px-6 py-2 sm:py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-emerald-300 transition-colors whitespace-nowrap flex-shrink-0 flex justify-center items-center text-sm shadow-md"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : 'Search'}
+            {isLoading ? <Loader2 className="animate-spin" size={16} /> : searchText}
           </button>
         </form>
 
@@ -88,10 +95,20 @@ export default function PollingLocator() {
                 >
                   <MapPin size={32} className="mb-2 opacity-50" />
                   {mapError ? (
-                    <>
-                      <span className="text-sm font-medium mb-1 text-red-500">Failed to load Google Maps</span>
-                      <span className="text-xs text-slate-500 text-center px-4">Make sure the "Maps JavaScript API" is enabled in your Google Cloud Console for the provided API key.</span>
-                    </>
+                    <div className="flex flex-col items-center justify-center p-4 text-center">
+                      <span className="text-sm font-medium mb-2 text-red-600">Failed to load Google Maps</span>
+                      <span className="text-xs text-slate-600 max-w-sm mb-3">
+                        Your API key works, but the "Maps JavaScript API" service is not enabled for it, or the API key has domain restrictions blocking this site.
+                      </span>
+                      <a 
+                        href="https://console.cloud.google.com/apis/library/maps-backend.googleapis.com" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Enable Maps JavaScript API
+                      </a>
+                    </div>
                   ) : (
                     <>
                       <span className="text-sm font-medium mb-1">Add Google Maps API Key to VITE_GOOGLE_MAPS_API_KEY in .env</span>
@@ -105,7 +122,7 @@ export default function PollingLocator() {
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center mb-3">
                   <List size={18} className="mr-2 text-slate-500" />
-                  List of Polling Places
+                  {listTitleText}
                 </h3>
                 <ul className="space-y-3">
                   {mockPollingPlaces.map((place, idx) => (

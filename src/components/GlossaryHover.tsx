@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 interface GlossaryHoverProps {
   term: string;
@@ -20,13 +17,17 @@ export default function GlossaryHover({ term, children }: GlossaryHoverProps) {
     if (definition) return;
     setIsLoading(true);
     try {
-      const systemInstruction = "Define this civic or electoral term in one short, clear, unbiased sentence for a general audience.";
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: term,
-        config: { systemInstruction }
+      const response = await fetch('/api/glossary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ term })
       });
-      setDefinition(response.text || 'Could not parse definition.');
+      const data = await response.json();
+      if (data.error) {
+         throw new Error(typeof data.error === 'string' ? data.error : data.error.message || 'API Error');
+      }
+      
+      setDefinition(data.definition || 'Could not parse definition.');
     } catch (error) {
       console.error(error);
       setDefinition('Could not load definition.');

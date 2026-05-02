@@ -8,8 +8,15 @@ import GlossaryHover from './components/GlossaryHover';
 import IndianElectionProcess from './components/IndianElectionProcess';
 import { useStore } from './store';
 
+import { T, useTranslation } from './hooks/useTranslation';
+
 export default function App() {
   const { selectedLanguage, setLanguage } = useStore();
+  const languageLabel = useTranslation('Language:');
+  const syncAccountBtn = useTranslation('Sync Account');
+  const privacyPolicy = useTranslation('Privacy Policy');
+  const nonPartisan = useTranslation('Non-Partisan Commitment');
+  const wcag = useTranslation('WCAG 2.1 AAA Compliant');
 
   return (
     <div className="w-full min-h-screen max-w-7xl mx-auto bg-slate-50 text-slate-900 font-sans flex flex-col shadow-2xl relative">
@@ -26,7 +33,7 @@ export default function App() {
         
         <div className="flex items-center gap-2 md:gap-6">
           <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200 text-xs md:text-sm font-medium">
-            <span className="text-slate-500 hidden sm:inline">Language:</span>
+            <span className="text-slate-500 hidden sm:inline">{languageLabel}</span>
             <label htmlFor="language-select" className="sr-only">Select Language</label>
             <select
               id="language-select"
@@ -41,7 +48,7 @@ export default function App() {
             </select>
           </div>
           <button className="px-3 md:px-4 py-1.5 md:py-2 bg-blue-700 text-white font-bold rounded-lg hover:bg-blue-800 transition-colors focus:ring-4 focus:ring-blue-200 text-sm md:text-base whitespace-nowrap" aria-label="Sign In to Sync">
-            Sync Account
+            {syncAccountBtn}
           </button>
         </div>
       </header>
@@ -73,13 +80,13 @@ export default function App() {
       <footer className="py-3 px-4 md:px-8 bg-slate-900 text-slate-400 text-[10px] md:text-xs flex flex-col md:flex-row items-center justify-between shrink-0 gap-2 md:gap-0">
         <div className="flex items-center gap-4 md:gap-6">
           <span>&copy; 2024 CivicSync Project</span>
-          <a href="#" className="hover:text-white underline">Privacy Policy</a>
-          <a href="#" className="hover:text-white underline">Non-Partisan Commitment</a>
+          <a href="#" className="hover:text-white underline">{privacyPolicy}</a>
+          <a href="#" className="hover:text-white underline">{nonPartisan}</a>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-            <span>WCAG 2.1 AAA Compliant</span>
+            <span>{wcag}</span>
           </div>
         </div>
       </footer>

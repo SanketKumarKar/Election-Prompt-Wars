@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { MessageSquare, Send, Loader2, Bot } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import { marked } from 'marked';
-import { GoogleGenAI } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { useTranslation } from '../hooks/useTranslation';
+import { translateText } from '../lib/translateService';
 
 export default function MultilingualAssistant() {
   const { selectedLanguage } = useStore();
-  const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string, html?: string}[]>([
-    { role: 'bot', text: 'Hello! I am your non-partisan civic assistant. Ask me anything about the election process.' }
-  ]);
+  const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string, html?: string}[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Translate initial message dynamically
+  useEffect(() => {
+    let isMounted = true;
+    translateText('Hello! I am your non-partisan civic assistant. Ask me anything about the election process.', selectedLanguage)
+      .then(text => {
+        if (isMounted && messages.length === 0) {
+          setMessages([{ role: 'bot', text }]);
+        }
+      });
+    return () => { isMounted = false; };
+  }, [selectedLanguage]);
+
+  const titleText = useTranslation('AI Procedural Assistant');
+  const placeholderText = useTranslation('Type a question...');
+  const thinkingText = useTranslation('Thinking...');
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,23 +38,27 @@ export default function MultilingualAssistant() {
     setIsLoading(true);
 
     try {
-      const systemInstruction = `You are a non-partisan, highly knowledgeable civic educator and voter assistant. Provide factual, unbiased answers about the election process, timelines, and voter rights. You must answer in ${selectedLanguage || 'English'} language.`;
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: userMessage,
-        config: { systemInstruction }
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage, language: selectedLanguage })
       });
-
-      if (!response.text) throw new Error('API Error');
       
-      const rawHTML = await marked.parse(response.text);
+      const data = await response.json();
+      if (data.error) {
+         setMessages(prev => [...prev, { role: 'bot', text: 'Sorry, I encountered an error. Please try again. (' + (typeof data.error === 'string' ? data.error : data.error.message || 'API Error') + ')' }]);
+         return;
+      }
+
+      const rawHTML = await marked.parse(data.text);
       const safeHTML = DOMPurify.sanitize(rawHTML);
 
-      setMessages(prev => [...prev, { role: 'bot', text: response.text, html: safeHTML }]);
-    } catch (err) {
+      setMessages(prev => [...prev, { role: 'bot', text: data.text, html: safeHTML }]);
+    } catch (err: any) {
       console.error(err);
-      setMessages(prev => [...prev, { role: 'bot', text: 'Sorry, I encountered an error. Please try again.' }]);
+      translateText('Sorry, I encountered an error. Please try again. (' + err.message + ')', selectedLanguage).then(t => {
+        setMessages(prev => [...prev, { role: 'bot', text: t }]);
+      });
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +69,7 @@ export default function MultilingualAssistant() {
       <div className="bg-slate-50 border-b border-slate-100 p-4 flex items-center space-x-3 shrink-0">
         <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
         <div>
-          <h2 className="text-sm font-bold text-slate-800">AI Procedural Assistant</h2>
+          <h2 className="text-sm font-bold text-slate-800">{titleText}</h2>
         </div>
       </div>
       
@@ -83,7 +100,7 @@ export default function MultilingualAssistant() {
             <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold text-xs">AI</div>
             <div className="bg-slate-100 text-slate-500 rounded-2xl rounded-tl-none p-3 flex items-center">
               <Loader2 className="animate-spin mr-2" size={16} />
-              <span className="text-sm">Thinking...</span>
+              <span className="text-sm">{thinkingText}</span>
             </div>
           </div>
         )}
@@ -97,7 +114,7 @@ export default function MultilingualAssistant() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a question..."
+            placeholder={placeholderText}
             className="flex-grow bg-transparent outline-none text-sm px-2"
             disabled={isLoading}
           />

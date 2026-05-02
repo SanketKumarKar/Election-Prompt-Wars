@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { differenceInDays, parseISO, isAfter } from 'date-fns';
 import { CheckCircle, Circle, Clock } from 'lucide-react';
+import { useTranslation, useTranslations } from '../hooks/useTranslation';
 
 interface Stage {
   id: string;
@@ -13,11 +14,22 @@ export default function VoterRoadmap() {
   const electionDate = '2026-11-03'; // mock date
 
   // Hardcoded stages for the example
+  const rawTitles = ['Register to Vote', 'Early Voting Begins', 'Vote by Mail Deadline', 'Election Day'];
+  const rawDescs = [
+    'Last day to register to vote online or by mail.',
+    'Early voting centers open in your county.',
+    'Last day to request a mail-in ballot.',
+    'Polls are open from 7:00 AM to 8:00 PM.'
+  ];
+
+  const titles = useTranslations(rawTitles);
+  const descriptions = useTranslations(rawDescs);
+
   const stages: Stage[] = [
-    { id: '1', title: 'Register to Vote', date: '2026-10-19', description: 'Last day to register to vote online or by mail.' },
-    { id: '2', title: 'Early Voting Begins', date: '2026-10-24', description: 'Early voting centers open in your county.' },
-    { id: '3', title: 'Vote by Mail Deadline', date: '2026-10-27', description: 'Last day to request a mail-in ballot.' },
-    { id: '4', title: 'Election Day', date: electionDate, description: 'Polls are open from 7:00 AM to 8:00 PM.' }
+    { id: '1', title: titles[0] || rawTitles[0], date: '2026-10-19', description: descriptions[0] || rawDescs[0] },
+    { id: '2', title: titles[1] || rawTitles[1], date: '2026-10-24', description: descriptions[1] || rawDescs[1] },
+    { id: '3', title: titles[2] || rawTitles[2], date: '2026-10-27', description: descriptions[2] || rawDescs[2] },
+    { id: '4', title: titles[3] || rawTitles[3], date: electionDate, description: descriptions[3] || rawDescs[3] }
   ];
 
   const currentDate = new Date().toISOString().split('T')[0];
@@ -25,6 +37,12 @@ export default function VoterRoadmap() {
   const daysToElection = useMemo(() => {
     return differenceInDays(parseISO(electionDate), parseISO(currentDate));
   }, [electionDate, currentDate]);
+
+  const roadmapTitle = useTranslation('Voter Journey Roadmap');
+  const roadmapDesc = useTranslation('Track your progress and key deadlines.');
+  const daysText = useTranslation('Days to Election');
+  const needReminderText = useTranslation('Need a reminder?');
+  const syncToCalendarText = useTranslation('Sync to Google Calendar');
 
   const handleSyncToCalendar = () => {
     const title = encodeURIComponent("Election Day");
@@ -46,13 +64,13 @@ export default function VoterRoadmap() {
             <Clock size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Voter Journey Roadmap</h2>
-            <p className="text-sm text-slate-500">Track your progress and key deadlines.</p>
+            <h2 className="text-xl font-semibold text-slate-900">{roadmapTitle}</h2>
+            <p className="text-sm text-slate-500">{roadmapDesc}</p>
           </div>
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold text-blue-600">{Math.max(0, daysToElection)}</div>
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-tight">Days to Election</div>
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-tight">{daysText}</div>
         </div>
       </div>
       
@@ -111,12 +129,12 @@ export default function VoterRoadmap() {
       </div>
       
       <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600 flex justify-between items-center">
-        <span>Need a reminder?</span>
+        <span>{needReminderText}</span>
         <button 
           onClick={handleSyncToCalendar}
           className="text-blue-600 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-xs"
         >
-          Sync to Google Calendar
+          {syncToCalendarText}
         </button>
       </div>
     </section>
