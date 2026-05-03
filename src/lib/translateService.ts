@@ -2,6 +2,10 @@ let batch: { text: string; target: string; resolve: (t: string) => void; reject:
 let batchTimeout: NodeJS.Timeout | null = null;
 let cache: Record<string, Record<string, string>> = {}; // target -> { text -> translatedStr }
 
+export const _clearCache = () => {
+  cache = {};
+};
+
 export async function translateText(text: string, target: string): Promise<string> {
   if (target === 'en') return text;
   

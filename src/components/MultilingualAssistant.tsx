@@ -54,9 +54,10 @@ export default function MultilingualAssistant() {
       const safeHTML = DOMPurify.sanitize(rawHTML);
 
       setMessages(prev => [...prev, { role: 'bot', text: data.text, html: safeHTML }]);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      translateText('Sorry, I encountered an error. Please try again. (' + err.message + ')', selectedLanguage).then(t => {
+      const msg = err instanceof Error ? err.message : String(err);
+      translateText('Sorry, I encountered an error. Please try again. (' + msg + ')', selectedLanguage).then(t => {
         setMessages(prev => [...prev, { role: 'bot', text: t }]);
       });
     } finally {

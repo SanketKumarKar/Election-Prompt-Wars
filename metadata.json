@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
-  "requestFramePermissions": [],
+  "name": "CivicSync",
+  "description": "A multilingual, non-partisan civic application helping voters navigate elections with an AI assistant, polling locator, ballot demystifier, and PDF cheat sheet.",
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": []
 }

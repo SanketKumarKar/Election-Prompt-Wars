@@ -32,50 +32,49 @@ async function startServer() {
         return res.json({ translatedText: text });
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.VITE_GOOGLE_CLOUD_API_KEY;
       if (!apiKey) {
-        return res.status(500).json({ error: 'Missing GEMINI_API_KEY in environment' });
+        return res.status(500).json({ error: 'Missing VITE_GOOGLE_CLOUD_API_KEY in environment' });
       }
 
-      const ai = new GoogleGenAI({ apiKey });
-      const languageMap: Record<string, string> = {
-        es: 'Spanish',
-        zh: 'Chinese',
-        hi: 'Hindi',
-        en: 'English'
-      };
+      const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          q: text,
+          target: target,
+          format: 'html'
+        })
+      });
 
-      const targetLanguage = languageMap[target] || target;
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error.message || 'Translation API Error');
+      }
 
-      const translateSingleText = async (t: string) => {
-        if (!t?.trim()) return t;
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: `Translate the following to ${targetLanguage}. Keep exactly the same HTML or markdown. Respond with nothing but the translation.\n\n${t}`,
-        });
-        return response.text?.trim() || t;
-      };
-
+      const translations = data.data?.translations;
       let translatedText;
       if (Array.isArray(text)) {
-        translatedText = await Promise.all(text.map(translateSingleText));
+        translatedText = translations.map((t: any) => t.translatedText);
       } else {
-        translatedText = await translateSingleText(text);
+        translatedText = translations[0].translatedText;
       }
 
       res.json({ translatedText });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Translation error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 
   app.post('/api/chat', async (req, res) => {
     try {
       const { message, language } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) return res.status(500).json({ error: 'Missing GEMINI_API_KEY in environment' });
+      const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      if (!apiKey) return res.status(500).json({ error: 'Missing VITE_GEMINI_API_KEY in environment' });
 
+      console.log('Using Gemini API key starting with:', apiKey.substring(0, 5));
       const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = `You are a non-partisan, highly knowledgeable civic educator and voter assistant. Provide factual, unbiased answers about the election process, timelines, and voter rights. You must answer in ${language || 'English'} language.`;
       
@@ -86,18 +85,19 @@ async function startServer() {
       });
 
       res.json({ text: response.text });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Chat error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 
   app.post('/api/demystify', async (req, res) => {
     try {
       const { text } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) return res.status(500).json({ error: 'Missing GEMINI_API_KEY in environment' });
+      const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      if (!apiKey) return res.status(500).json({ error: 'Missing VITE_GEMINI_API_KEY in environment' });
 
+      console.log('Demystify: Using Gemini API key starting with:', apiKey.substring(0, 5));
       const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = "You are a non-partisan civic educator. Translate this legal text into a 5th-grade reading level summary. List 3 Pros and 3 Cons. Do not hallucinate. Do not express political bias. Output the response in Markdown format, with headers for the Summary, Pros, and Cons.";
       
@@ -108,18 +108,19 @@ async function startServer() {
       });
 
       res.json({ text: response.text });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Demystify error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 
   app.post('/api/glossary', async (req, res) => {
     try {
       const { term } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) return res.status(500).json({ error: 'Missing GEMINI_API_KEY in environment' });
+      const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      if (!apiKey) return res.status(500).json({ error: 'Missing VITE_GEMINI_API_KEY in environment' });
 
+      console.log('Glossary: Using Gemini API key starting with:', apiKey.substring(0, 5));
       const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = `You are a civic educator preparing helpful glossary definitions. Provide a simple, clear, 1-2 sentence definition for the term. Keep it neutral and non-partisan. Format as plain text.`;
       
@@ -130,9 +131,9 @@ async function startServer() {
       });
 
       res.json({ definition: response.text || 'Definition unavailable.' });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Glossary error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 

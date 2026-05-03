@@ -2,7 +2,7 @@ import React, { useRef, useMemo } from 'react';
 import { useStore } from '../store';
 import { CheckSquare, Info } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { useTranslation, useTranslations } from '../hooks/useTranslation';
 
 export default function CheatSheetBuilder() {
@@ -36,17 +36,24 @@ export default function CheatSheetBuilder() {
   const handlePrint = async () => {
     if (!printRef.current) return;
     try {
-      const canvas = await html2canvas(printRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
+      const dataUrl = await toPng(printRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
       });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('ballot-cheat-sheet.pdf');
+      const img = new Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        const pdf = new jsPDF({
+          orientation: 'p',
+          unit: 'mm',
+          format: 'a4',
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (img.height * pdfWidth) / img.width;
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('ballot-cheat-sheet.pdf');
+      };
     } catch (err) {
       console.error('Failed to generate PDF', err);
     }
@@ -112,6 +119,7 @@ export default function CheatSheetBuilder() {
 
       <div className="sm:w-40 flex flex-col justify-center sm:border-l sm:border-slate-100 sm:pl-6 shrink-0 pt-4 sm:pt-0 border-t border-slate-100">
         <button 
+          type="button"
           onClick={handlePrint}
           className="mb-2 w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm focus:ring-2 focus:ring-slate-900 focus:outline-none hover:bg-slate-800 transition-colors"
         >

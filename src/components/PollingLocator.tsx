@@ -26,7 +26,7 @@ export default function PollingLocator() {
   };
 
   const [mapError, setMapError] = useState(false);
-  const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const API_KEY = import.meta.env.VITE_GOOGLE_CLOUD_API_KEY || '';
 
   const titleText = useTranslation('Polling Locator');
   const subtitleText = useTranslation('Find your nearest polling places');
@@ -111,7 +111,7 @@ export default function PollingLocator() {
                     </div>
                   ) : (
                     <>
-                      <span className="text-sm font-medium mb-1">Add Google Maps API Key to VITE_GOOGLE_MAPS_API_KEY in .env</span>
+                      <span className="text-sm font-medium mb-1">Add Google Maps API Key to VITE_GOOGLE_CLOUD_API_KEY in .env</span>
                       <span className="text-xs text-slate-500 text-center px-4">Make sure to enable "Maps JavaScript API" in your Google Cloud Console for the key.</span>
                     </>
                   )}
